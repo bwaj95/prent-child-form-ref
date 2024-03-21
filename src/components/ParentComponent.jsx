@@ -55,6 +55,7 @@ const ParentComponent = () => {
   const gatherChildrenForms = () => {
     console.log("gathering children form data...");
     let childrenFormData = Object.values(childRefs.current).map((ref) => {
+      if (!ref || !ref.current) return;
       console.log("printing form ref...");
       console.log(ref);
 
@@ -87,6 +88,7 @@ const ParentComponent = () => {
           ref={(ref) => (childRefs.current[childId] = ref)} // Store the ref using the childId as key
           defaultSource={"deft source"}
           defaultTarget={"deft Target"}
+          deleteChild={removeChildComponent}
         />
       ))}
 

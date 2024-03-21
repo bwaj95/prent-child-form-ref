@@ -5,6 +5,8 @@ import {
   useRef,
   useState,
 } from "react";
+import InputFieldComponent from "./InputFieldComponent";
+import OptionComponent from "./OptionComponent";
 
 /**
  * defaultSource and defaultTarget are objects in real app.
@@ -12,23 +14,27 @@ import {
  */
 
 const ChildComponent = forwardRef(function ChildComponent(
-  { id, name, defaultSource, defaultTarget },
+  { id, name, defaultSource, defaultTarget, deleteChild },
   parentRef
 ) {
-  const childRef = useRef(null);
+  const fieldRef = useRef(null);
 
-  const [sourceData, setSourceData] = useState({});
-  const [targetData, setTargetData] = useState({});
+  const [addOptions, setAddOptions] = useState(false);
 
-  const [isCustomField, setIsCustomField] = useState(false);
-  const [customFieldPrefix, setCustomFieldPrefix] = useState("custom_field.");
+  const [optionValues, setOptionValues] = useState();
+
+  useEffect(() => {
+    let values = [];
+
+    if (defaultSource.allowedValues && defaultSource.allowedValues.length > 0) {
+      values = [...defaultSource.allowedValues];
+    }
+
+    setOptionValues(values);
+  }, [defaultSource]);
 
   useImperativeHandle(parentRef, () => {
     return {
-      getName() {
-        console.log("getName called...");
-        return { id, name };
-      },
       getFormData() {
         return {
           [getSourceString()]: {
@@ -39,77 +45,42 @@ const ChildComponent = forwardRef(function ChildComponent(
     };
   });
 
-  useEffect(() => {
-    setSourceData(defaultSource);
-  }, [defaultSource]);
+  function compileInputFieldData() {
+    if (!fieldRef || !fieldRef.current) return null;
 
-  useEffect(() => {
-    setTargetData(defaultTarget);
-  }, [defaultTarget]);
+    let obj = fieldRef.current.getInputFieldData();
 
-  function snake_case_string(str) {
-    return (
-      str &&
-      str
-        .match(
-          /[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g
-        )
-        .map((s) => s.toLowerCase())
-        .join("_")
-    );
+    return {
+      [obj.source]: {
+        targetFieldName: obj.target,
+      },
+    };
   }
 
-  function getSourceString() {
-    return snake_case_string(sourceData);
-  }
-
-  function getTargetString() {
-    let prefix = isCustomField ? customFieldPrefix : "";
-
-    return prefix + snake_case_string(targetData);
-  }
+  function compileOptionsFieldData() {}
 
   return (
     <div className=" w-full border border-yellow-200 my-2 py-2 ">
-      <div ref={childRef}>
+      <div>
         <p>This is {name} - child.</p>
 
-        <div>
-          <label htmlFor="Source Input"></label>
-          <input
-            type="text"
-            value={sourceData}
-            onChange={(e) => setSourceData(e.target.value)}
-          />
-        </div>
+        <InputFieldComponent ref={fieldRef} />
 
         <div>
-          <label htmlFor="Target Input"></label>
-          <input
-            type="text"
-            value={targetData}
-            onChange={(e) => setTargetData(e.target.value)}
-          />
-        </div>
-
-        <div className="flex flex-row gap-x-2">
-          <label htmlFor="">Custom Field?</label>
-          <input
-            type="checkbox"
-            name="is_custom_field"
-            value={isCustomField}
-            onChange={(e) => setIsCustomField(!isCustomField)}
-          />
-
-          {isCustomField && (
-            <input
-              type="text"
-              value={customFieldPrefix}
-              onChange={(e) => setCustomFieldPrefix(e.target.value)}
-            />
-          )}
+          <button
+            className="bg-red-200 px-3 py-1 my-2"
+            onClick={() => deleteChild(id)}
+          >
+            Delete
+          </button>
         </div>
       </div>
+
+      {optionValues.length > 0 && (
+        <div>
+          <OptionComponent optionValues={optionValues} />
+        </div>
+      )}
     </div>
   );
 });
