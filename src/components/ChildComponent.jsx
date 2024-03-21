@@ -1,10 +1,4 @@
-import {
-  forwardRef,
-  useEffect,
-  useImperativeHandle,
-  useRef,
-  useState,
-} from "react";
+import { forwardRef, useImperativeHandle, useRef } from "react";
 import InputFieldComponent from "./InputFieldComponent";
 import OptionComponent from "./OptionComponent";
 
@@ -18,29 +12,12 @@ const ChildComponent = forwardRef(function ChildComponent(
   parentRef
 ) {
   const fieldRef = useRef(null);
-
-  const [addOptions, setAddOptions] = useState(false);
-
-  const [optionValues, setOptionValues] = useState();
-
-  useEffect(() => {
-    let values = [];
-
-    if (defaultSource.allowedValues && defaultSource.allowedValues.length > 0) {
-      values = [...defaultSource.allowedValues];
-    }
-
-    setOptionValues(values);
-  }, [defaultSource]);
+  const optionsRef = useRef(null);
 
   useImperativeHandle(parentRef, () => {
     return {
       getFormData() {
-        return {
-          [getSourceString()]: {
-            targetField: getTargetString(),
-          },
-        };
+        return compileResult();
       },
     };
   });
@@ -57,14 +34,43 @@ const ChildComponent = forwardRef(function ChildComponent(
     };
   }
 
-  function compileOptionsFieldData() {}
+  function compileOptionsFieldData() {
+    if (!optionsRef) return null;
+
+    let valuesObj = optionsRef.current.getOptionFieldsData();
+
+    return valuesObj;
+  }
+
+  function compileResult() {
+    let rootFields = compileInputFieldData();
+
+    let optionsFields = compileOptionsFieldData();
+
+    if (optionsFields) {
+      Object.entries(rootFields).forEach(([key, data]) => {
+        rootFields[key] = {
+          ...data,
+          values: { ...optionsFields },
+        };
+      });
+    }
+
+    return rootFields;
+  }
 
   return (
     <div className=" w-full border border-yellow-200 my-2 py-2 ">
       <div>
         <p>This is {name} - child.</p>
 
-        <InputFieldComponent ref={fieldRef} />
+        <InputFieldComponent
+          key={id}
+          id={id}
+          ref={fieldRef}
+          defaultSource={defaultSource}
+          defaultTarget={defaultTarget}
+        />
 
         <div>
           <button
@@ -76,11 +82,13 @@ const ChildComponent = forwardRef(function ChildComponent(
         </div>
       </div>
 
-      {optionValues.length > 0 && (
-        <div>
-          <OptionComponent optionValues={optionValues} />
-        </div>
-      )}
+      <div>
+        <OptionComponent
+          defaultSource={defaultSource}
+          defaultTarget={defaultTarget}
+          ref={optionsRef}
+        />
+      </div>
     </div>
   );
 });

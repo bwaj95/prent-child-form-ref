@@ -7,15 +7,16 @@ import {
 } from "react";
 
 const InputFieldComponent = forwardRef(function InputFieldComponent(
-  { defaultSource, defaultTarget },
+  { id, defaultSource, defaultTarget, onOptionDelete },
   parentRef
 ) {
-  const [sourceData, setSourceData] = useState({});
-  const [targetData, setTargetData] = useState({});
+  const [sourceData, setSourceData] = useState("");
+  const [targetData, setTargetData] = useState("");
 
   const [isCustomField, setIsCustomField] = useState(false);
   const [customFieldPrefix, setCustomFieldPrefix] = useState("custom_field.");
 
+  //   Refs can be used to highlight the input box and show errors
   const sourceFieldInputRef = useRef();
   const targetFieldInputRef = useRef();
 
@@ -66,27 +67,38 @@ const InputFieldComponent = forwardRef(function InputFieldComponent(
   }
 
   return (
-    <div>
-      <div>
-        <label htmlFor="Source Input"></label>
-        <input
-          type="text"
-          value={sourceData}
-          onChange={(e) => setSourceData(e.target.value)}
-          ref={sourceFieldInputRef}
-          required
-        />
-      </div>
+    <div className=" flex flex-col">
+      <div className=" flex flex-row space-x-4 ">
+        <div>
+          <input
+            type="text"
+            value={sourceData}
+            onChange={(e) => setSourceData(e.target.value)}
+            ref={sourceFieldInputRef}
+            required
+          />
+        </div>
 
-      <div>
-        <label htmlFor="Target Input"></label>
-        <input
-          type="text"
-          value={targetData}
-          onChange={(e) => setTargetData(e.target.value)}
-          ref={targetFieldInputRef}
-          required
-        />
+        <div>
+          <input
+            type="text"
+            value={targetData}
+            onChange={(e) => setTargetData(e.target.value)}
+            ref={targetFieldInputRef}
+            required
+          />
+        </div>
+
+        {onOptionDelete && (
+          <div>
+            <button
+              className=" bg-red-100 px-4 py-2 "
+              onClick={() => onOptionDelete(id)}
+            >
+              Delete Option
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-row gap-x-2">
